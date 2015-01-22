@@ -1,0 +1,193 @@
+---
+title: "Seeds"
+author: "Alexey Tsvetkov"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 10
+---
+
+```{r message=FALSE}
+library(lattice)
+library(latticeExtra)
+library(corrplot)
+library(e1071)
+library(MASS)
+library(nnet)
+```
+
+```{r}
+data <- read.table("./data/seeds_dataset.txt", comment.char = "#")
+names(data) <- c("Area", "Perimeter", "Compactness", "KernelLengh", "KernelWidth", "Asymmetry", "GrooveLength", "Variety")
+data$Variety <- as.factor(data$Variety)
+```
+
+Данные
+===
+
+```{r}
+summary(data)
+marginal.plot(data, data=data, groups=Variety)
+splom(
+    ~data,
+    data,      
+    upper.panel=function(x, y, ...) { panel.xyplot(x, y, ...); panel.loess(x, y, ..., col='red') },    
+    lower.panel=function(x, y, ...) { },      
+    pscale=0,       
+    varname.cex=0.6, 
+    par.settings=simpleTheme(pch='.', cex=1)
+  ) 
+corrplot.mixed(cor(subset(data, select=-Variety)), tl.cex=0.6)
+```
+
+LDA
+===
+
+```{r}
+test.lda <- function(formula) {
+  #fit <- lda(formula, data = data)
+  cv.result <- tune(lda, formula, data = data, predict.func = function(...) predict(...)$class,  tunecontrol = tune.control(sampling = "cross"))
+  
+  #print(fit)
+  print(cv.result)
+}
+```
+
+Попробуем включить в модель все параметры.
+
+```{r}
+test.lda(Variety ~ Area+Perimeter+Compactness+KernelLengh+KernelWidth+Asymmetry+GrooveLength)
+```
+
+`Area`, `Perimeter`, `KernelLengh` и `KernelWidth` сильно коррелируют (что логично).
+Также в описании данных есть формула выражения `Compactness` через `Perimeter` и `Area`. Можно попробовать что-нибудь из этого повыкидывать.
+
+```{r}
+test.lda(Variety ~ Perimeter+Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.lda(Variety ~ Area+Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.lda(Variety ~ KernelLengh+KernelWidth+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.lda(Variety ~ Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.lda(Variety ~ KernelLengh+KernelWidth+Asymmetry)
+```
+
+```{r}
+test.lda(Variety ~ Area+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.lda(Variety ~ Perimeter+Asymmetry+GrooveLength)
+```
+
+Результаты при каждом запуске немного разные. Большой разницы между моделями нет. Однако, по всей видимости, стоит оставить `GrooveLength`, `Asymmetry` и например `Area`.
+
+NaiveBayes
+===
+
+```{r}
+test.nb <- function(formula) {
+  #fit <- naiveBayes(formula, data = data)
+  cv.result <- tune(naiveBayes, formula, data = data, tunecontrol = tune.control(sampling = "cross"))
+  
+  #print(fit)
+  print(cv.result)
+}
+```
+
+Попробуем все модели, которые пробовали для LDA.
+
+```{r}
+test.nb(Variety ~ Area+Perimeter+Compactness+KernelLengh+KernelWidth+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.nb(Variety ~ Perimeter+Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.nb(Variety ~ Area+Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.nb(Variety ~ KernelLengh+KernelWidth+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.nb(Variety ~ Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.nb(Variety ~ KernelLengh+KernelWidth+Asymmetry)
+```
+
+```{r}
+test.nb(Variety ~ Area+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.nb(Variety ~ Perimeter+Asymmetry+GrooveLength)
+```
+
+В целом модель `Perimeter+Compactness+Asymmetry+GrooveLength` работает лучше других, хотя хуже LDA.
+
+Multinomial regression
+===
+
+```{r}
+test.mr <- function(formula) {
+  #fit <- multinom(formula, data = data, trace = FALSE)
+  cv.result <- tune(multinom, formula, data = data, trace=FALSE)
+  
+  #print(fit)
+  print(cv.result)
+}
+```
+
+Попробуем все модели, которые пробовали для LDA.
+
+```{r}
+test.mr(Variety ~ Area+Perimeter+Compactness+KernelLengh+KernelWidth+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.mr(Variety ~ Perimeter+Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.mr(Variety ~ Area+Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.mr(Variety ~ KernelLengh+KernelWidth+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.mr(Variety ~ Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.mr(Variety ~ KernelLengh+KernelWidth+Asymmetry)
+```
+
+```{r}
+test.mr(Variety ~ Area+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.mr(Variety ~ Perimeter+Asymmetry+GrooveLength)
+```
+
+На этот раз лучше оказалась модель `KernelLengh+KernelWidth+Asymmetry+GrooveLength`.
+
+В целом все методы показали близкие результаты. Каких-то идей, которые бы помогли улучшить результат у меня не появилось.

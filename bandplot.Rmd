@@ -1,0 +1,28 @@
+---
+title: "Bandplot"
+author: "Alexey Tsvetkov"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 10
+---
+
+```{r}
+library(lattice)
+```
+
+```{r}
+bandplot = function(formula, data, ...) {
+  
+}
+```
+
+```{r}
+n <- 100
+xs <- runif(n, 0, 5)
+ys <- xs*2 + rnorm(n)
+data <- data.frame(x = xs, y = ys)
+xyplot(y ~ x, data = data, groups = (x < y/2))
+```
+
+

@@ -1,0 +1,154 @@
+---
+title: "Concrete"
+author: "Alexey Tsvetkov"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 10
+---
+
+```{r message=FALSE}
+library(lattice)
+library(latticeExtra)
+library(corrplot)
+library(e1071)
+library(MASS)
+```
+
+Загрузим данные и переименуем наш целевой параметр `ConcreteCompressiveStrength` в `ConcreteStrength` (для лаконичности).
+
+```{r}
+data <- read.csv("./data/Concrete_Data.csv", comment.char = "#")
+names(data)[names(data)=="ConcreteCompressiveStrength"] <- 'ConcreteStrength'
+```
+
+Данные
+===
+
+```{r}
+summary(data)
+marginal.plot(data)
+```
+
+Заметим, что `Age` является дискретной величиной со значениями от 1 до 365 (возраст измеряется в днях).
+При этом данные по возрасту распределены не нормально, поэтому возможно их будет иметь смысл прологорифмировать.
+
+Построим графики зависимостей и корреляции всех параметров со всеми.
+```{r}
+splom(
+    ~data,
+    data,      
+    upper.panel=function(x, y, ...) { panel.xyplot(x, y, ...); panel.loess(x, y, ..., col='red') },    
+    lower.panel=function(x, y, ...) { },      
+    pscale=0,       
+    varname.cex=0.6, 
+    par.settings=simpleTheme(pch='.', cex=1)
+  ) 
+```
+
+```{r}
+corrplot.mixed(cor(data), tl.cex=0.6)
+```
+
+Похоже, что целевой параметр `ConcreteStrength` линейно зависит от `Cement` и `Superplasticizer`, 
+до некоторого порога от `FineAggregate` и `CoarseAggregate`. Зависимость от `Water` явно немонотонная, а от `Age`.
+
+Многие параметры также коррелируют между собой (сильнее всего `Water` и `Superplasticizer`).
+
+Посмотрим повлияют ли трансформации параметров на зависимость целевого параметра.
+
+```{r}
+strengthPlot = function(x) {
+  xyplot(ConcreteStrength ~ x, data, panel = function(...) { panel.xyplot(...); panel.loess(..., col='red') })
+}
+
+strengthPlot(data$Age)
+data$Age.log <- log(data$Age)
+strengthPlot(data$Age.log)
+```
+
+Ага, после логарифмирования зависимость от возраста стала до определённого возраста расти, а потом уменьшаться (видимо, с какого-то момента цемент начинает стареть).
+
+Возможно имеет смысл ввести фактор молодости.
+
+```{r}
+data$Age.young <- sapply(data$Age.log, function(x) { max(0, 4-x) })
+```
+
+```{r warning=FALSE}
+strengthPlot(data$Age.young)
+```
+
+Посмотрим подробнее на воду.
+
+```{r}
+strengthPlot(data$Water)
+```
+
+Зависимость немонотонная, возможно стоит попробовать учесть фактор `Water < 185` (медиана).
+
+Тестирование моделей
+===
+
+```{r}
+cv <- function(m) {
+  tune(lm, m$call$formula, data = data, tunecontrol = tune.control(sampling = "cross"))
+}
+```
+
+Для начала попробуем все оригинальные параметры.
+
+```{r}
+fit1 <- lm(ConcreteStrength ~ Cement + BlastFurnaceSlag + FlyAsh + Water + Superplasticizer + CoarseAggregate + FineAggregate + Age, data)
+summary(fit1)
+cv(fit1)
+```
+
+Попробуем заменить `Age` на `Age.log`.
+
+```{r}
+fit2 <- lm(ConcreteStrength ~ Cement + BlastFurnaceSlag + FlyAsh + Water + Superplasticizer + CoarseAggregate + FineAggregate + Age.log, data)
+summary(fit2)
+cv(fit2)
+```
+
+Попробуем учесть молодость.
+
+```{r}
+fit3 <- lm(ConcreteStrength ~ Cement + BlastFurnaceSlag + FlyAsh + Water + Superplasticizer + CoarseAggregate + FineAggregate + Age.log * Age.young, data)
+summary(fit3)
+cv(fit3)
+```
+
+Попробуем добавить ешё разных факторов и взаимодействий.
+
+```{r}
+data$Water.f <- (data$Water < 185)
+data$FineAggregate.f <- (data$FineAggregate < 800)
+data$FlyAsh.f <- (data$FlyAsh > 90)
+data$BlastFurnaceSlag.f <- (data$BlastFurnaceSlag > 90)
+data$Superplasticizer.f <- (data$Superplasticizer > 0)
+data$CoarseAggregate.f <- (data$CoarseAggregate < 1000)
+data$WS <- data$Water * data$Superplasticizer
+
+fit4 <- lm(ConcreteStrength ~ Cement + Cement:CoarseAggregate + Cement:FineAggregate + Water:CoarseAggregate + BlastFurnaceSlag*BlastFurnaceSlag.f + FlyAsh*FlyAsh.f +  Water*Water.f + Water:Superplasticizer + WS + Water:FineAggregate  + Superplasticizer * Superplasticizer.f  + CoarseAggregate*CoarseAggregate.f + FineAggregate*FineAggregate.f + CoarseAggregate * FineAggregate + Age.log * Age.young, data)
+summary(fit4)
+cv(fit4)
+```
+
+AIC
+===
+
+Попробуем запустить AIC на лучших моделях.
+
+```{r}
+fit3.aic <- stepAIC(fit3)
+summary(fit3.aic)
+cv(fit3.aic)
+```
+
+```{r}
+fit4.aic <- stepAIC(fit4)
+summary(fit4.aic)
+cv(fit4.aic)
+```
