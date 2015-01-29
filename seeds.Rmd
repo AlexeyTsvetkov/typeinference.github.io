@@ -190,4 +190,44 @@ test.mr(Variety ~ Perimeter+Asymmetry+GrooveLength)
 
 На этот раз лучше оказалась модель `KernelLengh+KernelWidth+Asymmetry+GrooveLength`.
 
+Multinomial regression with stepAIC
+===
+
+```{r}
+fit <- multinom(Variety ~ ., data, trace=FALSE)
+fit.aic <- stepAIC(fit)
+tune(multinom, fit.aic$call$formula, data=data, trace=FALSE)
+```
+
+`stepAIC` чуда не свершил.
+
+Linear svm
+===
+```{r}
+test.svm <- function(formula) {
+  tn.svm <- tune.svm(formula, data=data, type="C-classification", kernel="linear", cost^(-5:5))
+  tn.svm
+}
+```
+
+Попробуем лучшие модели предыдущих методов.
+
+```{r}
+test.svm(Variety ~ Area+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.svm(Variety ~ Perimeter+Compactness+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.svm(Variety ~ KernelLengh+KernelWidth+Asymmetry+GrooveLength)
+```
+
+```{r}
+test.svm(Variety ~ Area + KernelLengh + Asymmetry + GrooveLength)
+```
+
+С линейным svm тоже чего-то из ряда вон не случилось (разве, что модель, которую выбрал stepAIC с мультиномиальной регрессией, показала себя немного лучше других).
+
 В целом все методы показали близкие результаты. Каких-то идей, которые бы помогли улучшить результат у меня не появилось.

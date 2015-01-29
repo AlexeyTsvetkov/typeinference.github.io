@@ -1,0 +1,48 @@
+---
+title: "glaucoma"
+author: "Alexey Tsvetkov"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 10
+---
+
+```{r}
+library(e1071)
+library(MASS)
+library(lattice)
+```
+
+```{r}
+data <- read.table("./data/GlaucomaMVF.txt", header=TRUE, comment.char="#")
+```
+
+Linear kernel
+===
+
+```{r}
+tn.svm.l <- tune.svm(Class ~ ., data=data, type="C-classification", kernel="linear", cost = 2^(-10:10))
+tn.svm.l
+xyplot(tn.svm.l$performances[, "error"] ~ log(tn.svm.l$performances[, "cost"]), type="b")
+```
+
+Polynomial kernel
+===
+```{r}
+tn.svm.p <- tune.svm(Class ~ ., data=data, type="C-classification", kernel="polynomial", cost=2^(-10:10), degree=(1:5))
+tn.svm.p
+xyplot(tn.svm.p$performances[, "error"] ~ log(tn.svm.p$performances[, "cost"]), groups = tn.svm.p$performances[, "degree"] , type="b", auto.key=list(title="degree", corner=c(0.95,1), lines=TRUE))
+```
+
+Radial kernel
+===
+```{r}
+tn.svm.r <- tune.svm(Class ~ ., data=data, type="C-classification", kernel="radial", cost=2^(-10:10), gamma=(2^(-5:5))/ncol(data))
+tn.svm.r
+xyplot(tn.svm.r$performances[, "error"] ~ log(tn.svm.r$performances[, "cost"]), groups = tn.svm.r$performances[, "gamma"] , type="b", auto.key=list(title="gamma", corner=c(0.95,1), lines=TRUE))
+```
+
+Оказалось, что линейное ядро работает лучше любых полиномиальных ядер с более высокими степенями.
+Это говорит о том, что исходные данные хорошо разделимы линейно.
+Радиальное ядро также не показало результатов превосходивших линейное ядро.
+Ещё можно заметить, что при увеличении gamma результаты становятся хуже при равном значении cost.

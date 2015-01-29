@@ -12,17 +12,60 @@ library(lattice)
 ```
 
 ```{r}
-bandplot = function(formula, data, ...) {
+bandplot=function(formula, data, ...) {
+  panel.bands <- function(x, y, upper, lower, subscripts, fill, ...) {
+    order <- order(x)
+    x <- x[order]
+    subscripts <- subscripts[order]
+    upper <- upper[subscripts]
+    lower <- lower[subscripts]
+    
+    panel.polygon(c(x, rev(x)), c(upper, rev(lower)), border=FALSE, col=fill)
+  }
   
+  panel.bands.borders <- function(x, y, ...) {
+    args <- list(...)
+    order <- order(x)
+    x <- x[order]
+    upper <- args[['upper']][order]
+    lower <- args[['lower']][order]
+    panel.lines(x, upper, col='black');
+    panel.lines(rev(x), rev(lower), col='black')
+  }
+  
+  panel.bandplot <- function(x, y, ...) {
+    if (hasArg(groups)) {
+      panel.superpose(x, y, panel.groups=panel.bands, ...)
+    } else {
+      panel.bands(x, y, subscripts=seq_along(x), fill='gray95', ...)
+    }
+    
+    panel.bands.borders(x, y, ...)
+    panel.xyplot(x, y, ...)
+  }
+  
+  xyplot(formula, data, panel=panel.bandplot, ...)
 }
 ```
 
+Графики
+===
+
 ```{r}
 n <- 100
-xs <- runif(n, 0, 5)
-ys <- xs*2 + rnorm(n)
-data <- data.frame(x = xs, y = ys)
-xyplot(y ~ x, data = data, groups = (x < y/2))
+xs <- runif(n, -6, 6)
+ys <- xs^3
+us <- ys+10*(2+abs(rnorm(n)))
+ls <- ys-10*(2+abs(rnorm(n)))
+data <- data.frame(x=xs, y=ys)
 ```
 
+Без групп:
+```{r}
+bandplot(y ~ x, data, upper=us, lower=ls)
+```
 
+С группами:
+```{r}
+bandplot(y ~ x, data, upper=us, lower=ls, groups=(x < median(x)))
+```

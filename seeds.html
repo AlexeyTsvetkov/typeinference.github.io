@@ -110,26 +110,26 @@ data$Variety &lt;- as.factor(data$Variety)</code></pre>
 <p>Попробуем включить в модель все параметры.</p>
 <pre class="r"><code>test.lda(Variety ~ Area+Perimeter+Compactness+KernelLengh+KernelWidth+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'lda' using 10-fold cross validation: 0.03333333</code></pre>
+## Error estimation of 'lda' using 10-fold cross validation: 0.04285714</code></pre>
 <p><code>Area</code>, <code>Perimeter</code>, <code>KernelLengh</code> и <code>KernelWidth</code> сильно коррелируют (что логично). Также в описании данных есть формула выражения <code>Compactness</code> через <code>Perimeter</code> и <code>Area</code>. Можно попробовать что-нибудь из этого повыкидывать.</p>
 <pre class="r"><code>test.lda(Variety ~ Perimeter+Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
 ## Error estimation of 'lda' using 10-fold cross validation: 0.03809524</code></pre>
 <pre class="r"><code>test.lda(Variety ~ Area+Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'lda' using 10-fold cross validation: 0.04285714</code></pre>
+## Error estimation of 'lda' using 10-fold cross validation: 0.04761905</code></pre>
 <pre class="r"><code>test.lda(Variety ~ KernelLengh+KernelWidth+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
 ## Error estimation of 'lda' using 10-fold cross validation: 0.03333333</code></pre>
 <pre class="r"><code>test.lda(Variety ~ Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'lda' using 10-fold cross validation: 0.1142857</code></pre>
+## Error estimation of 'lda' using 10-fold cross validation: 0.1095238</code></pre>
 <pre class="r"><code>test.lda(Variety ~ KernelLengh+KernelWidth+Asymmetry)</code></pre>
 <pre><code>## 
 ## Error estimation of 'lda' using 10-fold cross validation: 0.1</code></pre>
 <pre class="r"><code>test.lda(Variety ~ Area+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'lda' using 10-fold cross validation: 0.04761905</code></pre>
+## Error estimation of 'lda' using 10-fold cross validation: 0.03809524</code></pre>
 <pre class="r"><code>test.lda(Variety ~ Perimeter+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
 ## Error estimation of 'lda' using 10-fold cross validation: 0.03333333</code></pre>
@@ -147,25 +147,25 @@ data$Variety &lt;- as.factor(data$Variety)</code></pre>
 <p>Попробуем все модели, которые пробовали для LDA.</p>
 <pre class="r"><code>test.nb(Variety ~ Area+Perimeter+Compactness+KernelLengh+KernelWidth+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.1047619</code></pre>
+## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.1</code></pre>
 <pre class="r"><code>test.nb(Variety ~ Perimeter+Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.05238095</code></pre>
+## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.06190476</code></pre>
 <pre class="r"><code>test.nb(Variety ~ Area+Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
 ## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.04761905</code></pre>
 <pre class="r"><code>test.nb(Variety ~ KernelLengh+KernelWidth+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.08571429</code></pre>
+## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.07619048</code></pre>
 <pre class="r"><code>test.nb(Variety ~ Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.1047619</code></pre>
+## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.1095238</code></pre>
 <pre class="r"><code>test.nb(Variety ~ KernelLengh+KernelWidth+Asymmetry)</code></pre>
 <pre><code>## 
-## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.1142857</code></pre>
+## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.1047619</code></pre>
 <pre class="r"><code>test.nb(Variety ~ Area+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.06190476</code></pre>
+## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.05238095</code></pre>
 <pre class="r"><code>test.nb(Variety ~ Perimeter+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
 ## Error estimation of 'naiveBayes' using 10-fold cross validation: 0.06666667</code></pre>
@@ -183,29 +183,106 @@ data$Variety &lt;- as.factor(data$Variety)</code></pre>
 <p>Попробуем все модели, которые пробовали для LDA.</p>
 <pre class="r"><code>test.mr(Variety ~ Area+Perimeter+Compactness+KernelLengh+KernelWidth+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'multinom' using 10-fold cross validation: 0.04761905</code></pre>
+## Error estimation of 'multinom' using 10-fold cross validation: 0.03333333</code></pre>
 <pre class="r"><code>test.mr(Variety ~ Perimeter+Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'multinom' using 10-fold cross validation: 0.05714286</code></pre>
+## Error estimation of 'multinom' using 10-fold cross validation: 0.05238095</code></pre>
 <pre class="r"><code>test.mr(Variety ~ Area+Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
 ## Error estimation of 'multinom' using 10-fold cross validation: 0.05238095</code></pre>
 <pre class="r"><code>test.mr(Variety ~ KernelLengh+KernelWidth+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'multinom' using 10-fold cross validation: 0.03333333</code></pre>
+## Error estimation of 'multinom' using 10-fold cross validation: 0.02857143</code></pre>
 <pre class="r"><code>test.mr(Variety ~ Compactness+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'multinom' using 10-fold cross validation: 0.1142857</code></pre>
+## Error estimation of 'multinom' using 10-fold cross validation: 0.1190476</code></pre>
 <pre class="r"><code>test.mr(Variety ~ KernelLengh+KernelWidth+Asymmetry)</code></pre>
 <pre><code>## 
-## Error estimation of 'multinom' using 10-fold cross validation: 0.08571429</code></pre>
+## Error estimation of 'multinom' using 10-fold cross validation: 0.09047619</code></pre>
 <pre class="r"><code>test.mr(Variety ~ Area+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'multinom' using 10-fold cross validation: 0.06666667</code></pre>
+## Error estimation of 'multinom' using 10-fold cross validation: 0.07619048</code></pre>
 <pre class="r"><code>test.mr(Variety ~ Perimeter+Asymmetry+GrooveLength)</code></pre>
 <pre><code>## 
-## Error estimation of 'multinom' using 10-fold cross validation: 0.03809524</code></pre>
+## Error estimation of 'multinom' using 10-fold cross validation: 0.04761905</code></pre>
 <p>На этот раз лучше оказалась модель <code>KernelLengh+KernelWidth+Asymmetry+GrooveLength</code>.</p>
+</div>
+<div id="multinomial-regression-with-stepaic" class="section level1">
+<h1>Multinomial regression with stepAIC</h1>
+<pre class="r"><code>fit &lt;- multinom(Variety ~ ., data, trace=FALSE)
+fit.aic &lt;- stepAIC(fit)</code></pre>
+<pre><code>## Start:  AIC=49.87
+## Variety ~ Area + Perimeter + Compactness + KernelLengh + KernelWidth + 
+##     Asymmetry + GrooveLength
+## 
+##                Df    AIC
+## - Compactness   2 46.790
+## - Perimeter     2 47.376
+## - KernelWidth   2 48.313
+## &lt;none&gt;            49.875
+## - Area          2 49.908
+## - Asymmetry     2 61.847
+## - KernelLengh   2 72.274
+## - GrooveLength  2 97.356
+## 
+## Step:  AIC=46.79
+## Variety ~ Area + Perimeter + KernelLengh + KernelWidth + Asymmetry + 
+##     GrooveLength
+## 
+##                Df    AIC
+## - Perimeter     2 43.738
+## - KernelWidth   2 44.104
+## - Area          2 46.656
+## &lt;none&gt;            46.790
+## - Asymmetry     2 59.129
+## - KernelLengh   2 70.016
+## - GrooveLength  2 94.284
+## 
+## Step:  AIC=43.74
+## Variety ~ Area + KernelLengh + KernelWidth + Asymmetry + GrooveLength
+## 
+##                Df    AIC
+## - KernelWidth   2 41.871
+## &lt;none&gt;            43.738
+## - Area          2 45.876
+## - Asymmetry     2 57.362
+## - KernelLengh   2 64.133
+## - GrooveLength  2 92.839
+## 
+## Step:  AIC=41.87
+## Variety ~ Area + KernelLengh + Asymmetry + GrooveLength
+## 
+##                Df    AIC
+## &lt;none&gt;            41.871
+## - Asymmetry     2 55.804
+## - Area          2 66.380
+## - KernelLengh   2 70.802
+## - GrooveLength  2 95.127</code></pre>
+<pre class="r"><code>tune(multinom, fit.aic$call$formula, data=data, trace=FALSE)</code></pre>
+<pre><code>## 
+## Error estimation of 'multinom' using 10-fold cross validation: 0.02857143</code></pre>
+<p><code>stepAIC</code> чуда не свершил.</p>
+</div>
+<div id="linear-svm" class="section level1">
+<h1>Linear svm</h1>
+<pre class="r"><code>test.svm &lt;- function(formula) {
+  tn.svm &lt;- tune.svm(formula, data=data, type=&quot;C-classification&quot;, kernel=&quot;linear&quot;, cost^(-5:5))
+  tn.svm
+}</code></pre>
+<p>Попробуем лучшие модели предыдущих методов.</p>
+<pre class="r"><code>test.svm(Variety ~ Area+Asymmetry+GrooveLength)</code></pre>
+<pre><code>## 
+## Error estimation of 'svm' using 10-fold cross validation: 0.06190476</code></pre>
+<pre class="r"><code>test.svm(Variety ~ Perimeter+Compactness+Asymmetry+GrooveLength)</code></pre>
+<pre><code>## 
+## Error estimation of 'svm' using 10-fold cross validation: 0.07142857</code></pre>
+<pre class="r"><code>test.svm(Variety ~ KernelLengh+KernelWidth+Asymmetry+GrooveLength)</code></pre>
+<pre><code>## 
+## Error estimation of 'svm' using 10-fold cross validation: 0.06666667</code></pre>
+<pre class="r"><code>test.svm(Variety ~ Area + KernelLengh + Asymmetry + GrooveLength)</code></pre>
+<pre><code>## 
+## Error estimation of 'svm' using 10-fold cross validation: 0.05714286</code></pre>
+<p>С линейным svm тоже чего-то из ряда вон не случилось (разве, что модель, которую выбрал stepAIC с мультиномиальной регрессией, показала себя немного лучше других).</p>
 <p>В целом все методы показали близкие результаты. Каких-то идей, которые бы помогли улучшить результат у меня не появилось.</p>
 </div>
 
