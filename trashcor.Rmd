@@ -1,0 +1,70 @@
+---
+title: "trashcor"
+author: "Alexey Tsvetkov"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 10
+---
+
+```{r}
+library(e1071)
+library(corrplot)
+```
+
+Сгенерируем выборку:
+```{r}
+generate.data = function(rows.count, predictors.count) {
+  m <- matrix(runif(rows.count * (predictors.count + 1)), nrow=rows.count)
+  data <- data.frame(runif(rows.count), m)
+  names(data)[1] <- "response"
+  data
+}
+
+data <- generate.data(50, 10000)
+```
+
+Отберём самые коррелированные признаки:
+```{r}
+most.correlated <- function(data, top.n) {
+  corr <- sapply(data, function(x) { abs(cor(data$response, x)) })
+  corr.order <- order(corr, decreasing = TRUE)
+  data[corr.order][, 0:top.n+1]
+}
+
+data.cor <- most.correlated(data, 20)
+```
+
+Убедимся, что признаки коррелируют с response:
+```{r}
+corrplot.mixed(cor(data.cor), tl.cex=0.6)
+```
+
+Построим модель:
+```{r}
+fit <- lm(response ~ ., data=data.cor)
+summary(fit)
+tune(lm, response ~ ., data=data.cor, tunecontrol=tune.control(cross = nrow(data.cor)))
+```
+
+Проведём проверку, разделив выборку на test/train:
+```{r}
+data <- generate.data(100, 10000)
+data.train <- data[1:50, ]
+data.test <- data[-(1:50), ]
+
+data.train <- most.correlated(data.train, 20)
+data.test <- data.test[names(data.train)]
+
+fit <- lm(response ~ ., data=data.train)
+summary(fit)
+tune(lm, response ~ ., data=data.test, tunecontrol=tune.control(cross = nrow(data.test)))
+```
+
+Кросс-валидация ведёт себя несколько нестабильно, но ошибка больше примерно на порядок.
+
+Что неудивительно, если посмотреть на графики корреляции:
+```{r}
+corrplot.mixed(cor(data.train), tl.cex=0.6)
+corrplot.mixed(cor(data.test), tl.cex=0.6)
+```
