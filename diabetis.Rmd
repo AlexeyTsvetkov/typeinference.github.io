@@ -1,0 +1,85 @@
+---
+title: "diabetis"
+author: "Alexey Tsvetkov"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 10
+---
+
+```{r}
+library(e1071)
+library(lattice)
+```
+
+```{r}
+data <- read.table("./data/Diabetis.txt", header=TRUE, comment.char="#")
+summary(data)
+```
+
+Linear kernel
+===
+
+```{r}
+tn.svm.linear <- tune(svm, diabetes ~ ., data=data, ranges=list(cost=2^(-10:10)), type="C-classification", kernel="linear")
+tn.svm.linear
+xyplot(tn.svm.linear$performances[, "error"] ~ log(tn.svm.linear$performances[, "cost"]), type="b")
+```
+
+Заметим, что классы в данных не равновероятны, возможно стоит добавить веса?
+```{r}
+pos.count <- sum(data$diabetes == 'pos')
+neg.count <- sum(data$diabetes == 'neg')
+all.count <- nrow(data)
+weights <- c(pos=1, neg=neg.count/all.count)
+print(weights)
+```
+
+```{r}
+tn.svm.linear <- tune(svm, diabetes ~ ., data=data, ranges=list(cost=2^(-10:10)), type="C-classification", kernel="linear", class.weights=weights)
+tn.svm.linear
+xyplot(tn.svm.linear$performances[, "error"] ~ log(tn.svm.linear$performances[, "cost"]), type="b")
+```
+
+Результат немного улучшился. К тому же лучший результат достигается при меньших значениях cost.
+
+Polynomial kernel
+===
+
+Без весов:
+```{r}
+tn.svm.polynomial <- tune(svm, diabetes ~ ., data=data, ranges=list(cost=2^(-5:10), degree=(1:5)), type="C-classification", kernel="polynomial")
+tn.svm.polynomial
+xyplot(tn.svm.polynomial$performances[, "error"] ~ log(tn.svm.polynomial$performances[, "cost"]), groups=tn.svm.polynomial$performances[, "degree"] , type="b", auto.key=list(title="degree", corner=c(0.95,1), lines=TRUE))
+```
+
+С весами:
+```{r}
+tn.svm.polynomial <- tune(svm, diabetes ~ ., data=data, ranges=list(cost=2^(-5:10), degree=(1:5)), type="C-classification", kernel="polynomial", class.weights=weights)
+tn.svm.polynomial
+xyplot(tn.svm.polynomial$performances[, "error"] ~ log(tn.svm.polynomial$performances[, "cost"]), groups=tn.svm.polynomial$performances[, "degree"] , type="b", auto.key=list(title="degree", corner=c(0.95,1), lines=TRUE))
+```
+
+С coef0:
+```{r}
+tn.svm.polynomial <- tune(svm, diabetes ~ ., data=data, ranges=list(cost=2^(-5:10), coef0=(-5:5)*2, degree=1), type="C-classification", kernel="polynomial", class.weights=weights)
+tn.svm.polynomial
+xyplot(tn.svm.polynomial$performances[, "error"] ~ log(tn.svm.polynomial$performances[, "cost"]), groups=tn.svm.polynomial$performances[, "coef0"] , type="b", auto.key=list(title="coef0", corner=c(0.95,1), lines=TRUE))
+```
+
+Radial kernel
+===
+
+Без весов:
+```{r}
+tn.svm.radial <- tune(svm, diabetes ~ ., data=data, ranges=list(cost=2^(-5:15), gamma=(2^(-5:5))/ncol(data)), type="C-classification", kernel="radial")
+tn.svm.radial
+plot(tn.svm.radial, transform.x=log2, transform.y=log10, color.palette=rainbow)
+```
+
+С весами:
+```{r}
+tn.svm.radial <- tune(svm, diabetes ~ ., data=data, ranges=list(cost=2^(-5:15), gamma=(2^(-5:5))/ncol(data)), type="C-classification", kernel="radial", class.weights=weights)
+tn.svm.radial
+plot(tn.svm.radial, transform.x=log2, transform.y=log10, color.palette=rainbow)
+```

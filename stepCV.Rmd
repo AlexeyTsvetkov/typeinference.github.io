@@ -4,9 +4,11 @@ author: "Alexey Tsvetkov"
 output: html_document
 ---
 
-```{r}
+```{r echo=FALSE}
 library(MASS)
 library(e1071)
+specificity <- caret:::specificity
+sensitivity <- caret:::sensitivity
 ```
 
 За подсчёт информационного критерия Акаике в пакете `MASS` отвечает, согласно 
@@ -25,16 +27,35 @@ library(e1071)
 extractCV <- function(fit, scale, k, ...) UseMethod("extractCV")
 
 extractCV.lm <- function(fit, scale, k, ...){
-    rank.performance(lm, fit)
-}
-
-rank.performance <- function(m, fit) {
   if (length(attr(fit$terms, "factors")) > 0) {
     t <- tune(lm, formula(fit$terms), data = eval(fit$call$data))
     c(t$best.model$rank, t$best.performance)
   } else {
     c(attr(fit$terms, "response"), 0)
   }
+}
+
+extractCV.glm <- function(fit, scale, k, ...){
+  fit.data <- eval(fit$call$data)
+  fit.data <- fit.data[sample(nrow(fit.data)),]
+  folds <- cut(seq(1, nrow(fit.data)), breaks=10, labels=FALSE)
+  
+  avg <- 0
+  for(i in 1:10) {
+      test.index <- which(folds==i, arr.ind=TRUE)
+      test.data <- fit.data[test.index, ]
+      train.data <- fit.data[-test.index, ]
+      
+      fit.glm <- glm(fit$call$formula, train.data, family=binomial)
+      response <- predict(fit.glm, newdata=test.data)
+      response <- 1 + as.integer(response > 0.5)
+      actual <- factor(levels(fit$model), test.data$chd)
+      predicted <- factor(levels(fit$model), response)
+      e <- 1 - mean(sensitivity(predicted, actual), specificity(predicted, actual))
+      avg <- avg + e
+  }
+  
+  c(fit$model$rank, avg/10.)
 }
 ```
 
@@ -705,6 +726,14 @@ stepCV <-
 
 Пример
 ===
+
+```{r}
+df = read.table("./data/SAheart.data.txt", sep=",", head=T, row.names=1)
+df$chd <- as.factor(df$chd)
+fit <- glm(chd ~ ., family=binomial, data=df)
+stepAIC(fit, trace=TRUE)
+stepCV(fit, trace=TRUE)
+```
 
 ```{r}
 data <- mtcars

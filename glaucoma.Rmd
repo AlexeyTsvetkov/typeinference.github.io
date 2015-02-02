@@ -21,25 +21,33 @@ Linear kernel
 ===
 
 ```{r}
-tn.svm.l <- tune.svm(Class ~ ., data=data, type="C-classification", kernel="linear", cost = 2^(-10:10))
-tn.svm.l
-xyplot(tn.svm.l$performances[, "error"] ~ log(tn.svm.l$performances[, "cost"]), type="b")
+tn.svm.linear <- tune(svm, Class ~ ., data=data, type="C-classification", kernel="linear", ranges=list(cost=2^(-10:10)))
+tn.svm.linear
+xyplot(tn.svm.linear$performances[, "error"] ~ log(tn.svm.linear$performances[, "cost"]), type="b")
 ```
 
 Polynomial kernel
 ===
 ```{r}
-tn.svm.p <- tune.svm(Class ~ ., data=data, type="C-classification", kernel="polynomial", cost=2^(-10:10), degree=(1:5))
-tn.svm.p
-xyplot(tn.svm.p$performances[, "error"] ~ log(tn.svm.p$performances[, "cost"]), groups = tn.svm.p$performances[, "degree"] , type="b", auto.key=list(title="degree", corner=c(0.95,1), lines=TRUE))
+tn.svm.polynomial <- tune(svm, Class ~ ., data=data, type="C-classification", kernel="polynomial", ranges=list(cost=2^(-10:10), degree=(1:5)))
+tn.svm.polynomial
+xyplot(tn.svm.polynomial$performances[, "error"] ~ log(tn.svm.polynomial$performances[, "cost"]), groups=tn.svm.polynomial$performances[, "degree"] , type="b", auto.key=list(title="degree", corner=c(0.95,1), lines=TRUE))
+```
+
+С coef0
+===
+```{r}
+tn.svm.polynomial <- tune(svm, Class ~ ., data=data, type="C-classification", kernel="polynomial", ranges=list(cost=2^(-10:10), degree=(1:2), coef0=(5:10)))
+tn.svm.polynomial
 ```
 
 Radial kernel
 ===
 ```{r}
-tn.svm.r <- tune.svm(Class ~ ., data=data, type="C-classification", kernel="radial", cost=2^(-10:10), gamma=(2^(-5:5))/ncol(data))
-tn.svm.r
-xyplot(tn.svm.r$performances[, "error"] ~ log(tn.svm.r$performances[, "cost"]), groups = tn.svm.r$performances[, "gamma"] , type="b", auto.key=list(title="gamma", corner=c(0.95,1), lines=TRUE))
+tn.svm.radial <- tune(svm, Class ~ ., data=data, type="C-classification", kernel="radial", ranges=list(cost=2^(-10:10), gamma=(2^(-5:5))/ncol(data)))
+tn.svm.radial
+xyplot(tn.svm.radial$performances[, "error"] ~ log(tn.svm.radial$performances[, "cost"]), groups=tn.svm.radial$performances[, "gamma"] , type="b", auto.key=list(title="gamma", corner=c(0.95,1), lines=TRUE))
+plot(tn.svm.radial, transform.x=log, transform.y=log, color.palette=rainbow)
 ```
 
 Оказалось, что линейное ядро работает лучше любых полиномиальных ядер с более высокими степенями.
