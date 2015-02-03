@@ -56,8 +56,6 @@ data.test <- data[-(1:50), ]
 data.train <- most.correlated(data.train, 20)
 data.test <- data.test[names(data.train)]
 
-fit <- lm(response ~ ., data=data.train)
-summary(fit)
 tune(lm, response ~ ., data=data.test, tunecontrol=tune.control(cross = nrow(data.test)))
 ```
 
@@ -67,4 +65,12 @@ tune(lm, response ~ ., data=data.test, tunecontrol=tune.control(cross = nrow(dat
 ```{r}
 corrplot.mixed(cor(data.train), tl.cex=0.6)
 corrplot.mixed(cor(data.test), tl.cex=0.6)
+```
+
+Update
+===
+
+```{r}
+data <- data[names(data.train)]
+tune(lm, response ~ ., data=data, tunecontrol=tune.control(cross = nrow(data)))
 ```

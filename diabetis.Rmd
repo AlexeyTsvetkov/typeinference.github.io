@@ -31,7 +31,7 @@ xyplot(tn.svm.linear$performances[, "error"] ~ log(tn.svm.linear$performances[, 
 pos.count <- sum(data$diabetes == 'pos')
 neg.count <- sum(data$diabetes == 'neg')
 all.count <- nrow(data)
-weights <- c(pos=1, neg=neg.count/all.count)
+weights <- c(neg=pos.count/all.count, pos=neg.count/all.count)
 print(weights)
 ```
 

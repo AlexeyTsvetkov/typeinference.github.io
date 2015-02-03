@@ -7,6 +7,7 @@ output: html_document
 ```{r echo=FALSE}
 library(MASS)
 library(e1071)
+library(ROCR)
 specificity <- caret:::specificity
 sensitivity <- caret:::sensitivity
 ```
@@ -35,27 +36,28 @@ extractCV.lm <- function(fit, scale, k, ...){
   }
 }
 
+AUC <- function(predicted, actual, ...) {
+  pred <- prediction(predicted, as.numeric(actual))
+  perf <- performance(pred, measure = "auc", ...)
+  perf@y.values[[1]]
+}
+
+error.fun.auc <- function(true, predicted) {
+  -AUC(predicted, true)
+}
+
+glm.tune <- function(fit) {
+  tune(glm, formula(fit$terms), data=eval(fit$call$data), 
+       family=binomial(link="logit"), tunecontrol=tune.control(error.fun=error.fun.auc))
+}
+
 extractCV.glm <- function(fit, scale, k, ...){
-  fit.data <- eval(fit$call$data)
-  fit.data <- fit.data[sample(nrow(fit.data)),]
-  folds <- cut(seq(1, nrow(fit.data)), breaks=10, labels=FALSE)
-  
-  avg <- 0
-  for(i in 1:10) {
-      test.index <- which(folds==i, arr.ind=TRUE)
-      test.data <- fit.data[test.index, ]
-      train.data <- fit.data[-test.index, ]
-      
-      fit.glm <- glm(fit$call$formula, train.data, family=binomial)
-      response <- predict(fit.glm, newdata=test.data)
-      response <- 1 + as.integer(response > 0.5)
-      actual <- factor(levels(fit$model), test.data$chd)
-      predicted <- factor(levels(fit$model), response)
-      e <- 1 - mean(sensitivity(predicted, actual), specificity(predicted, actual))
-      avg <- avg + e
+  if (length(attr(fit$terms, "factors")) > 0) {
+    t <- glm.tune(fit)
+    c(t$best.model$rank, t$best.performance)
+  } else {
+    c(attr(fit$terms, "response"), 0)
   }
-  
-  c(fit$model$rank, avg/10.)
 }
 ```
 
@@ -731,8 +733,11 @@ stepCV <-
 df = read.table("./data/SAheart.data.txt", sep=",", head=T, row.names=1)
 df$chd <- as.factor(df$chd)
 fit <- glm(chd ~ ., family=binomial, data=df)
-stepAIC(fit, trace=TRUE)
-stepCV(fit, trace=TRUE)
+fit.aic <- stepAIC(fit, trace=TRUE)
+fit.aic
+glm.tune(fit.aic)
+fit.cv <-stepCV(fit, trace=TRUE)
+fit.cv
 ```
 
 ```{r}
