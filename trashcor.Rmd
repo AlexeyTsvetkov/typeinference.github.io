@@ -71,6 +71,15 @@ Update
 ===
 
 ```{r}
-data <- data[names(data.train)]
-tune(lm, response ~ ., data=data, tunecontrol=tune.control(cross = nrow(data)))
+learn <- function(formula, data, subset=NULL, ...) {
+  if(is.null(subset)) { 
+    subset = 1:nrow(data)
+  }
+  
+  data.cor <- most.correlated(data[subset,], 20)
+  lm(response ~ ., data=data.cor)
+}
+
+data <- generate.data(100, 1000)
+tune(learn, response ~ ., data=data, tunecontrol=tune.control(cross = nrow(data.test)))
 ```
